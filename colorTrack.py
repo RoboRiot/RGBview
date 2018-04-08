@@ -33,15 +33,31 @@ while(1):
                 rowavg = rowavg + i;
                 colavg = colavg + j;
                 numseen = numseen + 1;
-    rowavg = rowavg / numseen
-    rowavgpoint = int(round(rowavg))
-    colavg = colavg / numseen
-    colavgpoint = int(round(colavg))
-    print ("(%f,%f)" % (colavg, rowavg))
-    for i in range(100):
-        for j in range(100):
-            
-    #print 	(mask.
+    if numseen == 0:
+        rowavg = int(round(len(maskList[0])/2))
+        colavg = int(round(len(maskList)/2))
+    else:
+        rowavg = rowavg / numseen
+        rowavgpoint = int(round(rowavg))
+        colavg = colavg / numseen
+        colavgpoint = int(round(colavg))
+    
+    directionHorizontal = len(maskList)/2 - colavg
+    moveHorizontalDir = 0
+    moveVerticalDir = 0
+
+
+    if abs(colavg - len(maskList[0])/2) > 100:
+        moveHorizontalDir = np.sign(colavg - len(maskList[0])/2)
+    if abs(rowavg - len(maskList)/2) > 100:
+        moveVerticalDir = np.sign(len(maskList)/2 - rowavg)
+
+    #print ("(%d,%d)" % (len(maskList[0]), len(maskList)))
+    #print ("(%d,%d)" % (colavg, rowavg))    
+    #print ("(%d,%d)" % (colavg - len(maskList[0])/2, len(maskList)/2 - rowavg))
+    print ("(%d,%d)" % (moveHorizontalDir, moveVerticalDir))
+
+
     k = cv2.waitKey(5) & 0xFF
     if k == 27:
         break
