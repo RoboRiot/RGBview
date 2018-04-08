@@ -11,18 +11,32 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 // have!
 #define SERVOMIN  110 // this is the 'minimum' pulse length count (out of 4096)
 #define SERVOMAX  575// this is the 'maximum' pulse length count (out of 4096) // 600
+#define MINANGLE  0
+#define MAXANGLE  180
 
 // our servo # counter
 uint8_t servonum = 0;
 
 
-int newAngle ;
+int hAngle ;
+int hDisplacement ;             // displacement angle
+int vAngle ;
+int vDisplacement ;             // displacement angle
 const int MaxChars = 4;
-char strValue[MaxChars+1];
-int index = 0;
+char hstrValue[MaxChars+1];
+int hindex = 0;
+char vstrValue[MaxChars+1];
+int vindex = 0;
 boolean stringComplete = false;  // whether the string is complete
-String inputString = "";         // a String to hold incoming data
+char inputString[MaxChars+1];         // a String to hold incoming data
+int turn ;                       // indicates whether hAngle or hDisplacement is being updated; 0 for horizontal, 1 for vertical
 
+// convAngle converts a requested angle (0-180) and converts it into pulse length for the servo
+unsigned int convAngle(int angle) {
+  long long num ;
+  num = 31*angle/12 + SERVOMIN ;        // simplified numbers to avoid int overflows
+  return num ;
+}
 
 void setup() {
   Serial.begin(9600);       // activate serial communication at 9600 baud
@@ -32,8 +46,13 @@ void setup() {
   
   pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
 
-  newAngle = (SERVOMIN + SERVOMAX) / 2 ;
-  pwm.setPWM(0,0,SERVOMIN) ;
+  hAngle = 90 ;
+  vAngle = 90 ;
+  Serial.println(itoa(hAngle,inputString,10));
+  pwm.setPWM(0,0,convAngle(hAngle)) ;
+  pwm.setPWM(1,0,convAngle(vAngle)) ;
+  pwm.setPWM(2,0,convAngle(180 - vAngle)) ;
+  int turn = 0 ;
 
   yield();
 }
@@ -73,25 +92,47 @@ void loop() {
   while(Serial.available()) 
    {
       char ch = Serial.read();
-      Serial.write(ch);
-      if(index < MaxChars && isDigit(ch)) { 
-            strValue[index++] = ch; 
-      } else { 
-            strValue[index] = 0; 
-            newAngle = atoi(strValue); 
-            if(newAngle > SERVOMIN && newAngle < SERVOMAX){
-                   pwm.setPWM(0,0,newAngle) ;
+      //Serial.write(ch);
+      if(hindex < MaxChars && turn == 0 && (isDigit(ch) || (hindex == 0 && ch == '-'))) { 
+            hstrValue[hindex++] = ch; 
+      } 
+      else if (ch == ' ') {               // space separates h and v vals
+        turn = 1 ;
+      }
+      else if(vindex < MaxChars && turn == 1 && (isDigit(ch) || vindex == 0 && ch == '-')) { 
+            vstrValue[vindex++] = ch; 
+      }
+      else { 
+            hstrValue[hindex] = '\0';
+            vstrValue[vindex] = '\0';
+            //Serial.println(itoa(convAngle(atoi(hstrValue)),inputString,10));
+            hDisplacement = atoi(hstrValue); 
+            vDisplacement = atoi(vstrValue);
+            //Serial.println(hDisplacement);
+            //Serial.println(vDisplacement);
+            if(hAngle + hDisplacement >= MINANGLE && hAngle + hDisplacement <= MAXANGLE){
+                   hAngle = hAngle + hDisplacement ;
+                   pwm.setPWM(0,0,convAngle(hAngle)) ;
                    stringComplete = true ;
             }
-            else  {Serial.println("Invalid angle");}
-            index = 0;
+            if(vAngle + vDisplacement >= MINANGLE && vAngle + vDisplacement <= MAXANGLE){
+                   vAngle = vAngle + vDisplacement ;
+                   pwm.setPWM(1,0,convAngle(vAngle)) ;
+                   pwm.setPWM(2,0,convAngle(180 - vAngle)) ;
+                   stringComplete = true ;
+            }
+            //stringComplete = true ;
+              
+            vindex = 0;
+            hindex = 0;
+            turn = 0 ;
       }  
    }
+
   // print the string when a newline arrives:
   if (stringComplete) {
-    Serial.println(strValue);
-    // clear the string:
-    inputString = "";
+    Serial.println(itoa(hAngle,inputString,10));
+    Serial.println(itoa(vAngle,inputString,10));
     stringComplete = false;
   }
 }
