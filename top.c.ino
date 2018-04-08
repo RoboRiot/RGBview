@@ -38,6 +38,16 @@ unsigned int convAngle(int angle) {
   return num ;
 }
 
+void reset() {
+  hAngle = 90 ;
+  vAngle = 95 ;
+  Serial.println(itoa(hAngle,inputString,10));
+  pwm.setPWM(0,0,convAngle(hAngle)) ;
+  pwm.setPWM(1,0,convAngle(vAngle)) ;
+  pwm.setPWM(2,0,convAngle(180 - vAngle)) ;
+  int turn = 0 ;
+}
+
 void setup() {
   Serial.begin(9600);       // activate serial communication at 9600 baud
   Serial.println("16 channel Servo test!");
@@ -46,13 +56,14 @@ void setup() {
   
   pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
 
-  hAngle = 90 ;
-  vAngle = 90 ;
+  /*hAngle = 90 ;
+  vAngle = 95 ;
   Serial.println(itoa(hAngle,inputString,10));
   pwm.setPWM(0,0,convAngle(hAngle)) ;
   pwm.setPWM(1,0,convAngle(vAngle)) ;
   pwm.setPWM(2,0,convAngle(180 - vAngle)) ;
-  int turn = 0 ;
+  int turn = 0 ;*/
+  reset() ;
 
   yield();
 }
@@ -98,6 +109,9 @@ void loop() {
       } 
       else if (ch == ' ') {               // space separates h and v vals
         turn = 1 ;
+      }
+      else if(ch == 'a') {                // reset to start position
+        reset() ;
       }
       else if(vindex < MaxChars && turn == 1 && (isDigit(ch) || vindex == 0 && ch == '-')) { 
             vstrValue[vindex++] = ch; 

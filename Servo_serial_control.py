@@ -37,8 +37,4 @@ for i in range(2):
         ser.write('0 1;'.encode())
         sleep(0.01)
 
-while h > 90:
-    h-= 1
-    v-= 1
-    ser.write('-1 -1;'.encode())
-    sleep(0.01)
+ser.write('a;'.encode())
