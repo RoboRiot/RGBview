@@ -3,7 +3,7 @@ import numpy as np
 
 import serial
 from time import sleep
-ser = serial.Serial('COM5',9600)
+ser = serial.Serial('COM3',9600)
 sleep(1)
 
 cap = cv2.VideoCapture(0)
@@ -52,16 +52,18 @@ while(1):
     moveVerticalDir = 0
 
 
-    if abs(colavg - len(maskList[0])/2) > 100:
-        moveHorizontalDir = np.sign(colavg - len(maskList[0])/2)
-    if abs(rowavg - len(maskList)/2) > 100:
+    if abs(colavg - len(maskList[0])/2) > 75:
+        moveHorizontalDir = np.sign(len(maskList[0])/2 - colavg)
+    if abs(rowavg - len(maskList)/2) > 75:
         moveVerticalDir = np.sign(len(maskList)/2 - rowavg)
 
     #print ("(%d,%d)" % (len(maskList[0]), len(maskList)))
     #print ("(%d,%d)" % (colavg, rowavg))    
     #print ("(%d,%d)" % (colavg - len(maskList[0])/2, len(maskList)/2 - rowavg))
     print ("(%d,%d)" % (moveHorizontalDir, moveVerticalDir))
-    ser.write(moveHorizontalDir + ' ' + moveVerticalDir + ';')
+    moveHorizontalDir = moveHorizontalDir * 4
+    moveVerticalDir = moveVerticalDir * 4
+    ser.write((str(moveHorizontalDir) + ' ' + str(moveVerticalDir) + ';').encode())
 
 
     k = cv2.waitKey(5) & 0xFF
