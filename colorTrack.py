@@ -1,6 +1,11 @@
 import cv2
 import numpy as np
 
+import serial
+from time import sleep
+ser = serial.Serial('COM5',9600)
+sleep(1)
+
 cap = cv2.VideoCapture(0)
 
 while(1):
@@ -56,6 +61,7 @@ while(1):
     #print ("(%d,%d)" % (colavg, rowavg))    
     #print ("(%d,%d)" % (colavg - len(maskList[0])/2, len(maskList)/2 - rowavg))
     print ("(%d,%d)" % (moveHorizontalDir, moveVerticalDir))
+    ser.write(moveHorizontalDir + ' ' + moveVerticalDir + ';')
 
 
     k = cv2.waitKey(5) & 0xFF
